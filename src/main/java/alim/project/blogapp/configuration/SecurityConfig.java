@@ -1,25 +1,40 @@
 package alim.project.blogapp.configuration;
 
+
+import alim.project.blogapp.repo.UserRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
+@EnableWebSecurity
 public class SecurityConfig {
-    @Bean
-    public UserDetailsService userDetailsService() {
-        UserDetails user1 = User.withUsername("user1")
-                .password("pass1")
-                .roles()
-                .build();
-        UserDetails user2 = User.withUsername("user2")
-                .password("pass2")
-                .roles()
-                .build();
 
-        return new InMemoryUserDetailsManager(user1, user2);
+    private final UserRepository userRepository;
+    public SecurityConfig(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers("/h2-console/**").permitAll()
+                        .requestMatchers("/register").permitAll()
+                        .requestMatchers("/login").permitAll()
+                        .anyRequest().authenticated()
+                )
+        ;
+        return http.build();
     }
 }

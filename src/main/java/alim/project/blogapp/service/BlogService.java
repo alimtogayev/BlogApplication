@@ -1,9 +1,6 @@
 package alim.project.blogapp.service;
 
-import alim.project.blogapp.dto.CommentResponse;
-import alim.project.blogapp.dto.LikeResponse;
-import alim.project.blogapp.dto.PostResponse;
-import alim.project.blogapp.dto.UserResponse;
+import alim.project.blogapp.dto.*;
 import alim.project.blogapp.entities.Comment;
 import alim.project.blogapp.entities.Like;
 import alim.project.blogapp.entities.Post;
@@ -12,6 +9,10 @@ import alim.project.blogapp.repo.CommentRepository;
 import alim.project.blogapp.repo.LikeRepository;
 import alim.project.blogapp.repo.PostRepository;
 import alim.project.blogapp.repo.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -23,12 +24,18 @@ public class BlogService {
     private final PostRepository postRepo;
     private final LikeRepository likeRepo;
     private final CommentRepository commentRepo;
-
-    public BlogService(UserRepository userRepo, PostRepository postRepo, LikeRepository likeRepo, CommentRepository commentRepo) {
+    private AuthenticationManager authManager;
+    private final PasswordEncoder passwordEncoder;
+    @Autowired
+    public BlogService(UserRepository userRepo, PostRepository postRepo, LikeRepository likeRepo,
+                       CommentRepository commentRepo,
+                       PasswordEncoder passwordEncoder) {
         this.userRepo = userRepo;
         this.postRepo = postRepo;
         this.likeRepo = likeRepo; // Assuming likeRepo is not used in this service, otherwise initialize it
         this.commentRepo = commentRepo;
+        this.passwordEncoder = passwordEncoder;
+
     }
 
     public List<UserResponse> getAllUsers() {
@@ -37,7 +44,7 @@ public class BlogService {
         for (User user : userList) {
             UserResponse userResponse = new UserResponse();
             userResponse.setId(user.getId());
-            userResponse.setName(user.getName());
+            userResponse.setName(user.getUsername());
             List<Post> postList = getPostsByUser(user.getId());
             List<Long> postIds = new ArrayList<>();
             for (Post post : postList) {
@@ -56,7 +63,7 @@ public class BlogService {
     }
 
     public List<PostResponse> showPostsByUser(Long userId) {
-        List<Post> postList= postRepo.findByUserId(userId);
+        List<Post> postList = postRepo.findByUserId(userId);
         List<PostResponse> postResponses = new ArrayList<>();
         for (Post post : postList) {
             PostResponse postResponse = new PostResponse();
@@ -147,7 +154,7 @@ public class BlogService {
         post.getComments().add(comment);
         postRepo.save(post);
         user.getComments().add(comment);
-        userRepo.save(user);          
+        userRepo.save(user);
         return commentResponse;
     }
 

@@ -4,6 +4,10 @@ import alim.project.blogapp.dto.*;
 import alim.project.blogapp.entities.Post;
 import alim.project.blogapp.entities.User;
 import alim.project.blogapp.service.BlogService;
+import alim.project.blogapp.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -11,10 +15,14 @@ import java.util.List;
 @RestController
 public class        BlogController {
     private final BlogService blogService;
+    private final UserService userService;
+    private final PasswordEncoder passwordEncoder;
 
-
-    public BlogController(BlogService blogService) {
+    @Autowired
+    public BlogController(BlogService blogService, UserService userService, PasswordEncoder passwordEncoder) {
         this.blogService = blogService;
+        this.userService = userService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @PostMapping("/users")
@@ -71,4 +79,32 @@ public class        BlogController {
     public List<CommentResponse> getUserComments(@PathVariable(name = "id") Long id) {
         return blogService.showUserComments(id);
     }
+
+    @GetMapping("/login")
+    public String login() {
+        return "Login page";
+    }
+
+    @GetMapping("/register")
+    public String register() {
+        return "Registration page";
+    }
+
+    @PostMapping("/register")
+    public UserResponse registerUser(@RequestBody User user) {
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        return blogService.addUser(user);
+    }
+
+    @PostMapping("/login")
+    public String loginUser(@RequestBody User user) {
+        UserDetails existingUser = userService.loadUserByUsername(user.getUsername());
+        if (existingUser != null && passwordEncoder.matches(user.getPassword(), existingUser.getPassword())) {
+            return "Login successful";
+        } else {
+            return "Invalid username or password";
+        }
+    }
+
+
 }
