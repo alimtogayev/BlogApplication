@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 @Entity
 @Table(name = "comments")
 public class Comment {
-    @Id @GeneratedValue(strategy = GenerationType.AUTO)
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @ManyToOne
     @JoinColumn(name = "user_id")
