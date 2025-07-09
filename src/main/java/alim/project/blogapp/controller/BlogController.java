@@ -80,31 +80,14 @@ public class        BlogController {
         return blogService.showUserComments(id);
     }
 
-    @GetMapping("/login")
-    public String login() {
-        return "Login page";
-    }
-
-    @GetMapping("/register")
-    public String register() {
-        return "Registration page";
-    }
-
     @PostMapping("/register")
-    public UserResponse registerUser(@RequestBody User user) {
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        return blogService.addUser(user);
+    public AuthenticationResponse registerUser(@RequestBody RegisterRequest registerRequest) {
+        return blogService.register(registerRequest);
     }
 
     @PostMapping("/login")
-    public String loginUser(@RequestBody User user) {
-        UserDetails existingUser = userService.loadUserByUsername(user.getUsername());
-        if (existingUser != null && passwordEncoder.matches(user.getPassword(), existingUser.getPassword())) {
-            return "Login successful";
-        } else {
-            return "Invalid username or password";
-        }
+    public AuthenticationResponse loginUser(@RequestBody AuthenticationRequest
+                                            authenticationRequest) {
+        return blogService.authenticate(authenticationRequest);
     }
-
-
 }

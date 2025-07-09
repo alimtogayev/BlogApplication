@@ -9,8 +9,11 @@ import alim.project.blogapp.repo.CommentRepository;
 import alim.project.blogapp.repo.LikeRepository;
 import alim.project.blogapp.repo.PostRepository;
 import alim.project.blogapp.repo.UserRepository;
+import io.jsonwebtoken.Jwts;
+import lombok.Builder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -24,18 +27,21 @@ public class BlogService {
     private final PostRepository postRepo;
     private final LikeRepository likeRepo;
     private final CommentRepository commentRepo;
+    private final JwtService jwtService;
     private AuthenticationManager authManager;
     private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
     @Autowired
     public BlogService(UserRepository userRepo, PostRepository postRepo, LikeRepository likeRepo,
                        CommentRepository commentRepo,
-                       PasswordEncoder passwordEncoder) {
+                       PasswordEncoder passwordEncoder, JwtService jwtService, AuthenticationManager authenticationManager) {
         this.userRepo = userRepo;
         this.postRepo = postRepo;
         this.likeRepo = likeRepo; // Assuming likeRepo is not used in this service, otherwise initialize it
         this.commentRepo = commentRepo;
         this.passwordEncoder = passwordEncoder;
-
+        this.jwtService = jwtService;
+        this.authenticationManager = authenticationManager;
     }
 
     public List<UserResponse> getAllUsers() {
@@ -266,6 +272,33 @@ public class BlogService {
             likeResponses.add(likeResponse);
         }
         return likeResponses;
+    }
+
+    public AuthenticationResponse authenticate(AuthenticationRequest request) {
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        request.getUsername(),
+                        request.getPassword())
+        );
+        var user = userRepo.findByUsername(request.getUsername()).orElseThrow();
+        var jwtToken = jwtService.generateToken(user);
+        return AuthenticationResponse.builder()
+                .token(jwtToken)
+                .build();
+    }
+
+    public AuthenticationResponse register(RegisterRequest request) {
+        var user = User.builder()
+                .name(request.getName())
+                .username(request.getUsername())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .authority("USER")
+                .build();
+        userRepo.save(user);
+        var jwtToken = jwtService.generateToken(user);
+        return AuthenticationResponse.builder()
+                .token(jwtToken)
+                .build();
     }
 }
 

@@ -1,15 +1,21 @@
 package alim.project.blogapp.entities;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+@Builder
+@AllArgsConstructor
 @Entity
+@NoArgsConstructor
 @Table(name = "authors")
 public class User implements UserDetails {
     @Id
@@ -50,10 +56,6 @@ public class User implements UserDetails {
             posts = new ArrayList<>();
         }
         return posts;
-    }
-
-    public User() {
-        // Default constructor
     }
 
     public List<Like> getLikes() {
@@ -113,4 +115,6 @@ public class User implements UserDetails {
     public void setName(String name) {
         this.name = name;
     }
+
+
 }
